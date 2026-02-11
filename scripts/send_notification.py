@@ -132,8 +132,16 @@ def send_to_serverchan(sendkey: str, title: str, content: str, retry_count: int 
         try:
             print(f"\n📤 发送微信通知 (尝试 {attempt + 1}/{retry_count})...")
             
-            # 禁用 SSL 验证以解决某些网络环境的 SSL 错误
-            response = requests.post(url, data=data, timeout=10, verify=False)
+            # 自动检测代理环境变量
+            proxies = {}
+            http_proxy = os.getenv('http_proxy') or os.getenv('HTTP_PROXY')
+            https_proxy = os.getenv('https_proxy') or os.getenv('HTTPS_PROXY')
+            if http_proxy:
+                proxies['http'] = http_proxy
+            if https_proxy:
+                proxies['https'] = https_proxy
+            
+            response = requests.post(url, data=data, timeout=15, verify=False, proxies=proxies if proxies else None)
             result = response.json()
             
             # 检查返回结果
