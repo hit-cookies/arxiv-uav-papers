@@ -100,10 +100,18 @@ def analyze_single_paper(model, paper: Dict, retry_count: int = 3) -> Dict:
             return paper
             
         except Exception as e:
-            print(f"   ⚠️  尝试 {attempt + 1}/{retry_count} 失败: {str(e)[:100]}")
-            if attempt < retry_count - 1:
+            error_msg = str(e)
+            print(f"   ⚠️  尝试 {attempt + 1}/{retry_count} 失败: {error_msg[:100]}")
+            
+            # 检测配额限制错误
+            if '429' in error_msg or 'quota' in error_msg.lower() or 'rate limit' in error_msg.lower():
+                wait_time = 60  # 配额限制时等待 60 秒
+                print(f"   ⏳ 检测到配额限制，等待 {wait_time} 秒...")
+                time.sleep(wait_time)
+            elif attempt < retry_count - 1:
                 time.sleep(REQUEST_DELAY_SECONDS)
-            else:
+            
+            if attempt == retry_count - 1:
                 # 所有重试失败，使用原始摘要
                 paper['analysis'] = f"【解决的问题】\n{paper['summary'][:200]}...\n\n【主要创新点】\n（AI分析失败，请查看原文摘要）"
                 paper['analysis_success'] = False
