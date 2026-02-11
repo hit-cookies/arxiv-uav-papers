@@ -37,9 +37,9 @@ def test_gemini():
         except Exception as e:
             print(f"   ⚠️  无法列出模型: {e}")
         
-        # 尝试使用 gemini-pro-latest 生成内容
+        # 尝试使用 gemini-1.5-flash 生成内容
         print("\n🧪 测试内容生成...")
-        model = genai.GenerativeModel('models/gemini-pro-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content("Hello! Please respond with 'OK' if you can read this.")
         
         print(f"✅ Gemini API 响应成功:")

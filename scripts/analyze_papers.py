@@ -83,12 +83,12 @@ def analyze_single_paper(model, paper: Dict, retry_count: int = 3) -> Dict:
         try:
             response = model.generate_content(
                 prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=GEMINI_TEMPERATURE,
-                    top_p=0.95,
-                    top_k=40,
-                    max_output_tokens=GEMINI_MAX_OUTPUT_TOKENS,
-                )
+                generation_config={
+                    'temperature': GEMINI_TEMPERATURE,
+                    'top_p': 0.95,
+                    'top_k': 40,
+                    'max_output_tokens': GEMINI_MAX_OUTPUT_TOKENS,
+                }
             )
             
             analysis = response.text.strip()

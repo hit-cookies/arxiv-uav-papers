@@ -61,9 +61,9 @@ ARXIV_CATEGORIES = [
 MAX_PAPERS_PER_DAY = 20
 
 # Gemini API 配置
-GEMINI_MODEL = "models/gemini-pro-latest"  # 使用最新的 gemini-pro 模型
+GEMINI_MODEL = "gemini-1.5-flash"  # 快速且经济
 GEMINI_TEMPERATURE = 0.4
-GEMINI_MAX_OUTPUT_TOKENS = 2048
+GEMINI_MAX_OUTPUT_TOKENS = 1024
 
 # 速率控制
 REQUEST_DELAY_SECONDS = 5  # Gemini API 请求间隔
