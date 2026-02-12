@@ -61,7 +61,7 @@ ARXIV_CATEGORIES = [
 MAX_PAPERS_PER_DAY = 10  # 降低到 10 篇以适应 Gemini 免费配额
 
 # Gemini API 配置
-GEMINI_MODEL = "gemini-2.5-flash"  # 最新可用的 flash 模型
+GEMINI_MODEL = "gemini-1.5-pro"  # 最新可用的 flash 模型
 GEMINI_TEMPERATURE = 0.4
 GEMINI_MAX_OUTPUT_TOKENS = 2048  # 增加到 2048 确保有足够空间输出完整分析
 
