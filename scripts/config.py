@@ -58,7 +58,7 @@ ARXIV_CATEGORIES = [
 ]
 
 # 每天处理的最大论文数量
-MAX_PAPERS_PER_DAY = 10  # 降低到 10 篇以适应 Gemini 免费配额
+MAX_PAPERS_PER_DAY = 15  # 降低到 10 篇以适应 Gemini 免费配额
 
 # Gemini API 配置
 GEMINI_MODEL = "gemini-3-flash-preview"  # 最新可用的 flash 模型
