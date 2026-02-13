@@ -61,9 +61,9 @@ ARXIV_CATEGORIES = [
 MAX_PAPERS_PER_DAY = 10  # 降低到 10 篇以适应 Gemini 免费配额
 
 # Gemini API 配置
-GEMINI_MODEL = "gemini-2.0-flash"  # 最新可用的 flash 模型
+GEMINI_MODEL = "gemini-3-flash-preview"  # 最新可用的 flash 模型
 GEMINI_TEMPERATURE = 0.4
 GEMINI_MAX_OUTPUT_TOKENS = 8192  # 增加到 2048 确保有足够空间输出完整分析
 
 # 速率控制
-REQUEST_DELAY_SECONDS = 10  # Gemini API 请求间隔（免费层限制 15 RPM，留足余量）
+REQUEST_DELAY_SECONDS = 35  # Gemini API 请求间隔（免费层限制 15 RPM，留足余量）
