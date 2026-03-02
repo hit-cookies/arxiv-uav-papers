@@ -27,16 +27,26 @@ def format_paper_card(paper: Dict, index: int) -> str:
     # 优先机构标记
     priority_mark = "⭐ " if paper.get('is_priority', False) else ""
     
-    # 格式化作者（最多显示3个）
-    authors = paper['authors'][:3]
-    author_str = ', '.join(authors)
-    if len(paper['authors']) > 3:
-        author_str += ' 等'
+    # 完整作者列表
+    all_authors = paper.get('authors', [])
+    author_str = ', '.join(all_authors)
+    
+    # 机构信息
+    affiliations = paper.get('affiliations', {})
+    institutions = []
+    if isinstance(affiliations, dict):
+        institutions = affiliations.get('_institutions', [])
+    
+    if institutions:
+        institution_str = f"**机构**: {' · '.join(institutions)}  "
+    else:
+        institution_str = ""
     
     # 构建卡片
     card = f"""### {priority_mark}{index}. {paper['title']}
 
 **作者**: {author_str}  
+{institution_str}
 **发布日期**: {paper['published']}  
 **arXiv**: [{paper['arxiv_id']}]({paper['link']})
 

@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 import time
 import sys
+import requests
 
 from config import (
     SEARCH_KEYWORDS,
@@ -80,12 +81,11 @@ def fetch_recent_papers(days_back: int = 7, max_results: int = 100) -> List[Dict
             if published < cutoff_date:
                 continue
             
-            # 提取作者信息
+            # 提取作者信息（完整列表）
             authors = [author.name for author in entry.authors]
             
-            # 尝试从作者信息中提取机构（arXiv API 可能不直接提供）
-            # 这里我们先简单存储作者列表，后续可以扩展
-            affiliations = []
+            # 机构信息通过 Semantic Scholar API 后续补充
+            affiliations = {}
             
             paper = {
                 'title': entry.title.replace('\n', ' ').strip(),
@@ -106,6 +106,90 @@ def fetch_recent_papers(days_back: int = 7, max_results: int = 100) -> List[Dict
             continue
     
     print(f"✅ 获取到 {len(papers)} 篇最近 {days_back} 天的论文")
+    
+    # 通过 Semantic Scholar API 补充机构信息
+    papers = enrich_papers_with_affiliations(papers)
+    
+    return papers
+
+
+def fetch_affiliations_from_semantic_scholar(arxiv_id: str) -> Dict[str, list]:
+    """
+    通过 Semantic Scholar API 获取论文作者的机构信息
+    
+    Args:
+        arxiv_id: arXiv 论文 ID（如 2401.12345 或 2401.12345v1）
+    
+    Returns:
+        字典，键为作者姓名，值为机构列表；以及特殊键 '_institutions' 存储去重后的机构列表
+    """
+    # 去掉版本号（如 v1, v2）
+    clean_id = arxiv_id.split('v')[0]
+    
+    url = f"https://api.semanticscholar.org/graph/v1/paper/ARXIV:{clean_id}"
+    params = {"fields": "authors.name,authors.affiliations"}
+    
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+        if resp.status_code != 200:
+            return {}
+        data = resp.json()
+        
+        authors_data = data.get("authors", [])
+        affiliations_map: Dict[str, list] = {}
+        all_institutions = []
+        
+        for author in authors_data:
+            name = author.get("name", "")
+            affils = author.get("affiliations", [])
+            affiliations_map[name] = affils
+            for inst in affils:
+                if inst and inst not in all_institutions:
+                    all_institutions.append(inst)
+        
+        affiliations_map["_institutions"] = all_institutions
+        return affiliations_map
+        
+    except Exception as e:
+        print(f"   ⚠️  Semantic Scholar 查询失败 ({arxiv_id}): {e}")
+        return {}
+
+
+def enrich_papers_with_affiliations(papers: List[Dict]) -> List[Dict]:
+    """
+    批量为论文补充机构信息
+    
+    Args:
+        papers: 论文列表
+    
+    Returns:
+        添加了机构信息的论文列表
+    """
+    print(f"\n🏛️  正在通过 Semantic Scholar 获取机构信息...")
+    success_count = 0
+    
+    for i, paper in enumerate(papers):
+        arxiv_id = paper.get("arxiv_id", "")
+        if not arxiv_id:
+            continue
+        
+        affiliations_map = fetch_affiliations_from_semantic_scholar(arxiv_id)
+        
+        if affiliations_map:
+            paper["affiliations"] = affiliations_map
+            institutions = affiliations_map.get("_institutions", [])
+            if institutions:
+                success_count += 1
+                print(f"   [{i+1}/{len(papers)}] ✅ {paper['title'][:50]}... → {', '.join(institutions[:3])}")
+            else:
+                print(f"   [{i+1}/{len(papers)}] ℹ️  {paper['title'][:50]}... → 未找到机构信息")
+        else:
+            print(f"   [{i+1}/{len(papers)}] ❌ {paper['title'][:50]}... → 查询失败")
+        
+        # 遵守 Semantic Scholar API 限速（无 key：1 req/s）
+        time.sleep(1.2)
+    
+    print(f"✅ 机构信息补充完成（{success_count}/{len(papers)} 篇成功）")
     return papers
 
 
@@ -119,8 +203,18 @@ def check_priority_institution(paper: Dict) -> bool:
     Returns:
         是否为优先机构
     """
-    # 在标题、作者列表、摘要中搜索机构名称
-    search_text = f"{paper['title']} {' '.join(paper['authors'])} {paper['summary']}".lower()
+    # 优先使用 Semantic Scholar 获取的机构信息
+    institutions = []
+    affiliations = paper.get('affiliations', {})
+    if isinstance(affiliations, dict):
+        institutions = affiliations.get('_institutions', [])
+    
+    # 如果有 Semantic Scholar 机构数据则优先使用
+    if institutions:
+        search_text = ' '.join(institutions).lower()
+    else:
+        # 备用：在标题、作者列表、摘要中搜索机构名称
+        search_text = f"{paper['title']} {' '.join(paper['authors'])} {paper['summary']}".lower()
     
     for institution in PRIORITY_INSTITUTIONS:
         if institution.lower() in search_text:

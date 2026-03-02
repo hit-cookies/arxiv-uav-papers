@@ -32,11 +32,17 @@ def create_analysis_prompt(paper: Dict) -> str:
     Returns:
         提示词字符串
     """
+    # 构建机构信息字符串
+    affiliations = paper.get('affiliations', {})
+    institutions = affiliations.get('_institutions', []) if isinstance(affiliations, dict) else []
+    institution_line = f"机构：{' · '.join(institutions)}\n" if institutions else ""
+    
     prompt = f"""请分析以下无人机导航领域的学术论文，用简洁的中文回答：
 
 论文标题：{paper['title']}
 
-作者：{', '.join(paper['authors'][:5])}{'等' if len(paper['authors']) > 5 else ''}
+作者：{', '.join(paper['authors'])}
+{institution_line}
 
 摘要：
 {paper['summary'][:3000]}
