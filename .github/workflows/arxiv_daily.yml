@@ -31,10 +31,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          QQ_EMAIL_PASSWORD: ${{ secrets.QQ_EMAIL_PASSWORD }}
         run: |
           cd scripts
           python main.py
-      
+
       - name: 📊 Upload logs (if failed)
         if: failure()
         uses: actions/upload-artifact@v4
